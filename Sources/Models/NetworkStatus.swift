@@ -10,5 +10,4 @@ public struct NetworkStatus: Equatable {
 		self.expensive = expensive
 		self.wasChanged = wasChanged
 	}
-	
 }
