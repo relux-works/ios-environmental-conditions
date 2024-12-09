@@ -1,4 +1,4 @@
-public struct NetworkStatus: Equatable {
+public struct NetworkStatus: Equatable, Sendable {
 	public let connected: Bool?
 	public let expensive: Bool?
 	public let wasChanged: Bool?
