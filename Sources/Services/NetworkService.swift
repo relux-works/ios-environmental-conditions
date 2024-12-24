@@ -52,11 +52,32 @@ class NetworkService {
 		let isExpensive = path.isExpensive
 		let isConnected = path.status == .satisfied
 		let wasChanged = prevStatus.connected != isConnected
-		
+        let isVpnEnabled = checkVPNEnabled()
+
 		return .init(
 			connected: isConnected,
 			expensive: isExpensive,
-			wasChanged: wasChanged
+			wasChanged: wasChanged,
+            vpnEnabled: isVpnEnabled
 		)
 	}
+}
+
+// vpn helper
+extension NetworkService {
+    private static let vpnProtocols = ["tap", "tun", "ppp", "ipsec", "utun"]
+
+    private func checkVPNEnabled() -> Bool {
+        guard let cfDict = CFNetworkCopySystemProxySettings() else { return false }
+
+        let nsDict = cfDict.takeRetainedValue() as NSDictionary
+        guard let keys = nsDict["__SCOPED__"] as? NSDictionary,
+              let allKeys = keys.allKeys as? [String]
+              else { return false }
+
+        return allKeys
+            .contains { key in
+                Self.vpnProtocols.contains { ptcl in key.contains(ptcl)}
+            }
+    }
 }
