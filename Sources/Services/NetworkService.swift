@@ -75,7 +75,9 @@ extension NetworkService {
               let allKeys = keys.allKeys as? [String]
               else { return false }
 
-        return zip(allKeys, Self.vpnProtocols)
-            .contains(where: { $0.contains($1) })
+        return allKeys
+            .contains { key in
+                Self.vpnProtocols.contains { ptcl in key.contains(ptcl)}
+            }
     }
 }
