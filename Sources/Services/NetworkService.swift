@@ -1,22 +1,21 @@
 import Foundation
-import Combine
+@preconcurrency import Combine
 import Network
 
-#warning("exposure to data race around access to status; change network service to Actor")
-class NetworkService {
+actor NetworkService {
 	private let monitor = NWPathMonitor()
 	
 	private let queue = DispatchQueue(label: "NetworkMonitor", qos: .userInitiated)
 	private(set) var status: NetworkStatus = .init()
-	private let networkSub = CurrentValueSubject<NetworkStatus, Never>(.init())
-	
-	public var networkPub: AnyPublisher<NetworkStatus, Never> {
+	private nonisolated let networkSub = CurrentValueSubject<NetworkStatus, Never>(.init())
+
+	public nonisolated var networkPub: AnyPublisher<NetworkStatus, Never> {
 		networkSub
 			.removeDuplicates()
 			.eraseToAnyPublisher()
 	}
 	
-	public init () {
+	public init() {
 		startWatchNetworkCondition()
 	}
 	
@@ -24,23 +23,24 @@ class NetworkService {
 		startWatchNetworkCondition()
 	}
 	
-	private func startWatchNetworkCondition() {
+	private nonisolated func startWatchNetworkCondition() {
 		let t1 = Date()
 		monitor.pathUpdateHandler = { [weak self] path in
-			guard let strongSelf = self else {
-				return
-			}
-			
-			let prevStatus = strongSelf.status
-			let nextStatus = strongSelf.buildStatus(path: path, prevStatus: prevStatus)
-			if prevStatus != nextStatus {
-				if #available(iOS 14, *) {
-					log("network status: \(path.status), isExpensive: \(path.isExpensive)", category: .default)
-				}
-			}
-			
-			strongSelf.status = nextStatus
-			strongSelf.networkSub.send(nextStatus)
+            Task {
+                guard let strongSelf = self else {
+                    return
+                }
+
+                let prevStatus = await strongSelf.status
+                let nextStatus = await strongSelf.buildStatus(path: path, prevStatus: prevStatus)
+                if prevStatus != nextStatus {
+                    if #available(iOS 14, *) {
+                        log("network status: \(path.status), isExpensive: \(path.isExpensive)", category: .default)
+                    }
+                }
+
+                await strongSelf.setStatus(nextStatus)
+            }
 		}
 		
 		monitor.start(queue: queue)
@@ -61,6 +61,11 @@ class NetworkService {
             vpnEnabled: isVpnEnabled
 		)
 	}
+
+    private func setStatus(_ status: NetworkStatus) {
+        self.status = status
+        networkSub.send(status)
+    }
 }
 
 // vpn helper

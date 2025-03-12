@@ -2,6 +2,7 @@ import UIKit
 import Combine
 
 @available(iOS 14, *)
+@MainActor
 public class EnvironmentalConditionsObserver: ObservableObject {
     private let deviceBatteryLevelObserver: DeviceBatteryLevelObserver
     private let devicePowerModeObserver: DevicePowerModeObserver
@@ -11,15 +12,12 @@ public class EnvironmentalConditionsObserver: ObservableObject {
     @Published public private(set) var deviceBatteryLevel: Float
     @Published public private(set) var devicePowerModeState: UIDevice.PowerModeState
 	@Published public private(set) var deviceNetworkStatus: NetworkStatus
-    
-    
-    public init(
-        
-    ) {
+
+    public init() {
         self.deviceBatteryLevelObserver = .init()
         self.devicePowerModeObserver = .init()
 		self.deviceNetworkStateObserver = .init()
-        
+
         deviceBatteryLevel = deviceBatteryLevelObserver.deviceBatteryLevel
         deviceBatteryState = deviceBatteryLevelObserver.deviceBatteryState
         devicePowerModeState = devicePowerModeObserver.devicePowerModeState

@@ -2,15 +2,13 @@ import Combine
 import UIKit
 
 @available(iOS 14, *)
+@MainActor
 class DeviceBatteryLevelObserver: ObservableObject {
     
     @Published internal private(set) var deviceBatteryState: UIDevice.BatteryState
     @Published internal private(set) var deviceBatteryLevel: Float
-    
-	
-    init(
-    
-    ) {
+
+    init() {
         Self.enableBatteryMonitoring()
         deviceBatteryLevel =
             UIDevice.current.isSimulator

@@ -5,18 +5,17 @@ internal class DeviceNetworkStateObserver: ObservableObject {
 	
 	private var networkService: NetworkService
 	
-	@Published private(set) var deviceNetworkStatus: NetworkStatus
-	
+    @Published private(set) var deviceNetworkStatus: NetworkStatus = .init()
+
 	init() {
 		let networkService = NetworkService()
 		self.networkService = networkService
-		self.deviceNetworkStatus = networkService.status
-		initNetworkServicePipeline()
+        initNetworkServicePipeline()
 	}
 	
 	
 	private func initNetworkServicePipeline() {
-		networkService
+        networkService
 			.networkPub
 			.removeDuplicates()
 			.receive(on: DispatchQueue.main)
